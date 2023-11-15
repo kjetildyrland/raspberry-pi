@@ -21,7 +21,7 @@ def format_data_for_transmission(raw_data):
 lora = serial.Serial(port='/dev/ttyS0', baudrate=9600, parity=serial.PARITY_NONE, stopbits=serial.STOPBITS_ONE, bytesize=serial.EIGHTBITS, timeout=1)
 
 # Read and parse the .sub file
-sub_file_path = "path_to_your_file.sub"  # Replace with your .sub file path
+sub_file_path = "rf/edited_rf_captures/868Mhz/white_fastfade.sub"  # Replace with your .sub file path
 raw_data = read_sub_file(sub_file_path)
 
 # Format the data for transmission
