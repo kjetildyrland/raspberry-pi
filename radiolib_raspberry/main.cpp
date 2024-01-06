@@ -3,6 +3,8 @@
 // include the hardware abstraction layer
 #include "PiHal.h"
 
+#include "BuildOpt.h"
+
 PiHal *hal = new PiHal(1);
 
 unsigned long Timestamp;
