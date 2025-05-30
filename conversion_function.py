@@ -37,7 +37,7 @@ except Exception as e:
 
 # Now try to configure SPI if the module supports it
 print("\nTrying SPI configuration...")
-spi_methods = ["setSPI", "setSpi", "configureSPI", "spiConfig"]
+spi_methods = ["setSpi", "setSPI", "configureSPI", "spiConfig"]
 spi_configured = False
 
 for method_name in spi_methods:
