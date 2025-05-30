@@ -11,99 +11,70 @@ for method in methods:
 
 print("\nTrying basic initialization...")
 
-# First, just try to begin without any configuration
+# Configure SPI first
+print("Configuring SPI...")
 try:
-    print("Attempting LoRa.begin()...")
+    LoRa.setSpi(0, 0, 1000000)  # bus 0, CS 0, 1MHz
+    print("[SUCCESS] SPI configured")
+except Exception as e:
+    print(f"SPI error: {e}")
+
+# Try to configure GPIO pins before begin()
+print("Trying to configure GPIO pins...")
+gpio_methods = ["setPin", "setPins", "setResetPin", "setDio1Pin", "setBusyPin"]
+for method_name in gpio_methods:
+    if hasattr(LoRa, method_name):
+        print(f"Found GPIO method: {method_name}")
+
+# Try to set individual pins if methods exist
+try:
+    if hasattr(LoRa, "setResetPin"):
+        LoRa.setResetPin(22)
+        print("Reset pin set to GPIO 22")
+    if hasattr(LoRa, "setDio1Pin"):
+        LoRa.setDio1Pin(17)
+        print("DIO1 pin set to GPIO 17")
+    if hasattr(LoRa, "setBusyPin"):
+        LoRa.setBusyPin(27)
+        print("BUSY pin set to GPIO 27")
+    if hasattr(LoRa, "setPin"):
+        LoRa.setPin(reset=22, dio1=17, busy=27)
+        print("All pins set using setPin method")
+except Exception as e:
+    print(f"GPIO pin configuration error: {e}")
+
+# Set frequency before begin
+print("Setting frequency...")
+try:
+    LoRa.setFrequency(868000000)  # 868 MHz
+    print("[SUCCESS] Frequency set to 868 MHz")
+except Exception as e:
+    print(f"Frequency error: {e}")
+
+# Now try to begin
+print("\nAttempting LoRa.begin()...")
+try:
     result = LoRa.begin()
     print(f"LoRa.begin() result: {result}")
     if result:
-        print("[SUCCESS] Module initialized")
+        print("[SUCCESS] Module initialized successfully!")
 
-        # Try to get some basic info
+        # Try to get module info
         try:
-            # Try different methods that might exist
             if hasattr(LoRa, "getChipVersion"):
                 print(f"Chip version: {LoRa.getChipVersion()}")
-            if hasattr(LoRa, "getMode"):
-                print(f"Current mode: {LoRa.getMode()}")
         except Exception as e:
-            print(f"Error getting module info: {e}")
+            print(f"Error getting chip info: {e}")
 
     else:
-        print("[FAILED] Failed to initialize")
+        print("[FAILED] Module initialization failed")
 
 except Exception as e:
     print(f"Error during begin(): {e}")
-
-# Now try to configure SPI if the module supports it
-print("\nTrying SPI configuration...")
-spi_methods = ["setSpi", "setSPI", "configureSPI", "spiConfig"]
-spi_configured = False
-
-for method_name in spi_methods:
-    if hasattr(LoRa, method_name):
-        try:
-            method = getattr(LoRa, method_name)
-            print(f"Found SPI method: {method_name}")
-            # Try common parameter combinations
-            try:
-                method(0, 0, 1000000)  # bus, cs, speed
-                print(f"[SUCCESS] SPI configured with {method_name}")
-                spi_configured = True
-                break
-            except Exception as e:
-                print(f"Error with {method_name}(0, 0, 1000000): {e}")
-                try:
-                    method(0, 0)  # bus, cs only
-                    print(f"[SUCCESS] SPI configured with {method_name}(bus, cs)")
-                    spi_configured = True
-                    break
-                except Exception as e2:
-                    print(f"Error with {method_name}(0, 0): {e2}")
-        except Exception as e:
-            print(f"Error accessing {method_name}: {e}")
-
-if not spi_configured:
-    print("No SPI configuration method found or working")
-
-# Try to set frequency
-print("\nTrying frequency configuration...")
-freq_methods = ["setFrequency", "setFreq", "frequency"]
-for method_name in freq_methods:
-    if hasattr(LoRa, method_name):
-        try:
-            method = getattr(LoRa, method_name)
-            method(868000000)  # 868 MHz
-            print(f"[SUCCESS] Frequency set using {method_name}")
-            break
-        except Exception as e:
-            print(f"Error with {method_name}: {e}")
-
-print("\nNow attempting full initialization...")
-try:
-    if LoRa.begin():
-        print("[SUCCESS] Final initialization successful!")
-
-        # Try basic packet transmission test
-        print("Testing basic packet transmission...")
-        try:
-            # Look for transmission methods
-            tx_methods = ["transmit", "send", "sendPacket", "write"]
-            for method_name in tx_methods:
-                if hasattr(LoRa, method_name):
-                    print(f"Found transmission method: {method_name}")
-        except Exception as e:
-            print(f"Error checking transmission methods: {e}")
-
-    else:
-        print("[FAILED] Final initialization failed")
-        print("\nThis could be due to:")
-        print("1. Incorrect wiring")
-        print("2. Wrong GPIO pin configuration")
-        print("3. SPI not enabled")
-        print("4. Module power issues")
-
-except Exception as e:
-    print(f"Final initialization error: {e}")
+    print(
+        "This 'tuple index out of range' error suggests GPIO pin configuration issues"
+    )
 
 print("\nDiagnostic complete.")
+print("\nRecommendation: Consider using the working C++ RadioLib version instead")
+print("The C++ version in radiolib_raspberry/ is already configured and working")
