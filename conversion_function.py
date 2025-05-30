@@ -3,11 +3,91 @@ import time
 
 LoRa = SX126x()
 
-# set to use SPI with bus id 0 and cs id 1 and speed 7.8 Mhz
-LoRa.setSpi(0, 0, 7800000)
+# Configure GPIO pins for SX126x module
+# These pins are required for the module to work properly
+print("Configuring GPIO pins...")
 
-if not LoRa.begin():
-    raise Exception("Something wrong, can't begin LoRa radio")
+# Set the GPIO pins for RESET, DIO1, and BUSY
+# Adjust these pin numbers based on your actual wiring
+try:
+    # Common GPIO pin assignments for SX126x on Raspberry Pi:
+    RESET_PIN = 22  # GPIO 22 (Pin 15)
+    DIO1_PIN = 17  # GPIO 17 (Pin 11)
+    BUSY_PIN = 27  # GPIO 27 (Pin 13)
+
+    # Configure the GPIO pins
+    LoRa.setPin(nss=8, reset=RESET_PIN, dio1=DIO1_PIN, busy=BUSY_PIN)
+    print(
+        f"GPIO pins configured: NSS=8, RESET={RESET_PIN}, DIO1={DIO1_PIN}, BUSY={BUSY_PIN}"
+    )
+
+except AttributeError:
+    print("Warning: setPin() method not available. Trying alternative configuration...")
+    try:
+        # Alternative pin setting methods
+        LoRa.setResetPin(22)
+        LoRa.setDio1Pin(17)
+        LoRa.setBusyPin(27)
+        print("GPIO pins configured using individual methods")
+    except AttributeError:
+        print("Warning: Individual pin methods not available either")
+
+# Configure SPI settings
+print("Attempting to configure SPI...")
+try:
+    LoRa.setSPI(0, 0, 1000000)  # Lower speed: 1MHz instead of 7.8MHz
+    print("SPI configured: Bus 0, CS 0, Speed 1MHz")
+except Exception as e:
+    print(f"SPI configuration error: {e}")
+
+# Add delay before begin
+time.sleep(0.1)
+
+print("Attempting to initialize SX126x...")
+try:
+    if not LoRa.begin():
+        print("✗ Failed: LoRa.begin() returned False")
+
+        # Try alternative configurations
+        print("Trying alternative SPI settings...")
+
+        # Try CS1 instead of CS0
+        LoRa.setSPI(0, 1, 1000000)
+        time.sleep(0.1)
+        if LoRa.begin():
+            print("✓ Success with CS1!")
+        else:
+            print("✗ Still failed with CS1")
+
+            # Try even slower speed
+            LoRa.setSPI(0, 0, 500000)  # 500kHz
+            time.sleep(0.1)
+            if LoRa.begin():
+                print("✓ Success with 500kHz!")
+            else:
+                print("✗ All SPI configurations failed")
+                raise Exception("Could not initialize SX126x module")
+    else:
+        print("✓ SX126x module initialized successfully!")
+
+except Exception as e:
+    print(f"Detailed error: {e}")
+    print("\nTroubleshooting suggestions:")
+    print("1. Check wiring connections:")
+    print("   - VCC → 3.3V (Pin 1 or 17)")
+    print("   - GND → Ground (Pin 6, 9, 14, 20, 25, 30, 34, or 39)")
+    print("   - SCK → GPIO 11 (Pin 23)")
+    print("   - MISO → GPIO 9 (Pin 21)")
+    print("   - MOSI → GPIO 10 (Pin 19)")
+    print("   - NSS/CS → GPIO 8 (Pin 24) for CS0 or GPIO 7 (Pin 26) for CS1")
+    print(f"   - RESET → GPIO {RESET_PIN} (Pin 15)")
+    print(f"   - DIO1 → GPIO {DIO1_PIN} (Pin 11)")
+    print(f"   - BUSY → GPIO {BUSY_PIN} (Pin 13)")
+    print("2. Verify 3.3V power supply (NOT 5V!)")
+    print("3. Ensure SPI is enabled: sudo raspi-config")
+    print("4. Check if module is SX1262/SX1261 (not SX127x)")
+    print("5. Run: sudo usermod -a -G gpio,spi $USER")
+    raise
 
 # Set frequency to 868 MHz (for EU/UK PixMob bracelets)
 # Use 915 MHz for US bracelets: LoRa.setFrequency(915000000)
