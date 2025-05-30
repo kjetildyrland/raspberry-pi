@@ -4,7 +4,7 @@ import time
 LoRa = SX126x()
 
 # set to use SPI with bus id 0 and cs id 1 and speed 7.8 Mhz
-LoRa.setSPI(0, 0, 7800000)
+LoRa.setSpi(0, 0, 7800000)
 
 if not LoRa.begin():
     raise Exception("Something wrong, can't begin LoRa radio")
