@@ -5,6 +5,9 @@
 
 #include "BuildOpt.h"
 
+// Define the GPIO pin for DIO2 output (choose an available GPIO pin)
+#define RADIO_DIO_2_PORT 23
+
 PiHal *hal = new PiHal(1);
 
 unsigned long Timestamp;
@@ -16,9 +19,12 @@ int ColorIndex = 0, BitDuration = 500;
 
 void MicrosDelay(unsigned long m)
 {
-    unsigned long n = micros();
-    while (micros() - n < m)
-        yield;
+    unsigned long n = hal->micros();
+    while (hal->micros() - n < m)
+    {
+        // yield equivalent - just a small delay
+        hal->delayMicroseconds(1);
+    }
 }
 
 std::array<byte, BytesCount> ByteArray;
@@ -46,33 +52,61 @@ void ByteArraySend(void)
     for (int j = 0; j < sizeof(ByteArray); j++)
         for (int i = 0; i < 8; i++)
         {
-            digitalWrite(RADIO_DIO_2_PORT, (128U & ByteArray[j]) / 128U);
+            hal->digitalWrite(RADIO_DIO_2_PORT, (128U & ByteArray[j]) / 128U);
             MicrosDelay(BitDuration);
             ByteArray[j] <<= 1;
         }
-    digitalWrite(RADIO_DIO_2_PORT, 0);
+    hal->digitalWrite(RADIO_DIO_2_PORT, 0);
     for (int k = 0; k < 8; k++)
         MicrosDelay(BitDuration);
 }
 
-void setup()
+int main(int argc, char **argv)
 {
-    radio.beginFSK();
+    // Initialize the HAL
+    hal->init();
+    
+    // Set up the DIO2 pin as output
+    hal->pinMode(RADIO_DIO_2_PORT, PI_OUTPUT);
+    
+    // Initialize radio
+    printf("[SX1261] Initializing ... ");
+    int state = radio.beginFSK();
+    if (state != RADIOLIB_ERR_NONE)
+    {
+        printf("failed, code %d\n", state);
+        hal->term();
+        return (1);
+    }
+    printf("success!\n");
+    
     radio.setFrequency(868.0F);
     radio.setOOK(true);
     radio.transmitDirect();
-}
+    
+    // Initialize timestamp
+    Timestamp = hal->millis();
 
-void loop()
-{
-    ByteArray = {0xaa, 0xaa, 0x55, 0xa1, 0x21, 0x21, 0x21, 0x18, 0x8d, 0xa1, 0x0a, 0x40};
-    ByteArraySend();
-    if (millis() - Timestamp > 2000)
+    // Main loop
+    for (;;)
     {
-        Timestamp = millis();
-        for (int i = 0; i < BytesCount; i++)
-            ByteArray[i] = ColorArrayArray[ColorIndex][i];
+        ByteArray = {0xaa, 0xaa, 0x55, 0xa1, 0x21, 0x21, 0x21, 0x18, 0x8d, 0xa1, 0x0a, 0x40};
         ByteArraySend();
-        ColorIndex = ColorIndex++ == ValidValuesCount - 1 ? 0 : ColorIndex;
+        
+        if (hal->millis() - Timestamp > 2000)
+        {
+            Timestamp = hal->millis();
+            for (int i = 0; i < BytesCount; i++)
+                ByteArray[i] = ColorArrayArray[ColorIndex][i];
+            ByteArraySend();
+            ColorIndex = (ColorIndex + 1) % ValidValuesCount;
+        }
+        
+        // Small delay to prevent excessive CPU usage
+        hal->delay(10);
     }
+    
+    // Cleanup
+    hal->term();
+    return (0);
 }

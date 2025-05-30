@@ -12,7 +12,7 @@ project(rpi-sx1261)
 #add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../../../../RadioLib" "${CMAKE_CURRENT_BINARY_DIR}/RadioLib")
 
 # add the executable
-add_executable(${PROJECT_NAME} main.cpp)
+add_executable(${PROJECT_NAME} example.cpp)
 
 # link both libraries
 target_link_libraries(${PROJECT_NAME} RadioLib pigpio)
