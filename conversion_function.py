@@ -17,7 +17,7 @@ try:
     result = LoRa.begin()
     print(f"LoRa.begin() result: {result}")
     if result:
-        print("✓ Success! Module initialized")
+        print("[SUCCESS] Module initialized")
 
         # Try to get some basic info
         try:
@@ -30,7 +30,7 @@ try:
             print(f"Error getting module info: {e}")
 
     else:
-        print("✗ Failed to initialize")
+        print("[FAILED] Failed to initialize")
 
 except Exception as e:
     print(f"Error during begin(): {e}")
@@ -48,14 +48,14 @@ for method_name in spi_methods:
             # Try common parameter combinations
             try:
                 method(0, 0, 1000000)  # bus, cs, speed
-                print(f"✓ SPI configured with {method_name}")
+                print(f"[SUCCESS] SPI configured with {method_name}")
                 spi_configured = True
                 break
             except Exception as e:
                 print(f"Error with {method_name}(0, 0, 1000000): {e}")
                 try:
                     method(0, 0)  # bus, cs only
-                    print(f"✓ SPI configured with {method_name}(bus, cs)")
+                    print(f"[SUCCESS] SPI configured with {method_name}(bus, cs)")
                     spi_configured = True
                     break
                 except Exception as e2:
@@ -74,7 +74,7 @@ for method_name in freq_methods:
         try:
             method = getattr(LoRa, method_name)
             method(868000000)  # 868 MHz
-            print(f"✓ Frequency set using {method_name}")
+            print(f"[SUCCESS] Frequency set using {method_name}")
             break
         except Exception as e:
             print(f"Error with {method_name}: {e}")
@@ -82,7 +82,7 @@ for method_name in freq_methods:
 print("\nNow attempting full initialization...")
 try:
     if LoRa.begin():
-        print("✓ Final initialization successful!")
+        print("[SUCCESS] Final initialization successful!")
 
         # Try basic packet transmission test
         print("Testing basic packet transmission...")
@@ -96,7 +96,7 @@ try:
             print(f"Error checking transmission methods: {e}")
 
     else:
-        print("✗ Final initialization failed")
+        print("[FAILED] Final initialization failed")
         print("\nThis could be due to:")
         print("1. Incorrect wiring")
         print("2. Wrong GPIO pin configuration")
