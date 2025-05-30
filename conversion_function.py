@@ -1,217 +1,109 @@
 from LoRaRF import SX126x
 import time
 
+print("Creating SX126x instance...")
 LoRa = SX126x()
 
-# Configure GPIO pins for SX126x module
-# These pins are required for the module to work properly
-print("Configuring GPIO pins...")
+print("Available methods in SX126x:")
+methods = [method for method in dir(LoRa) if not method.startswith("_")]
+for method in methods:
+    print(f"  - {method}")
 
-# Set the GPIO pins for RESET, DIO1, and BUSY
-# Adjust these pin numbers based on your actual wiring
+print("\nTrying basic initialization...")
+
+# First, just try to begin without any configuration
 try:
-    # Common GPIO pin assignments for SX126x on Raspberry Pi:
-    RESET_PIN = 22  # GPIO 22 (Pin 15)
-    DIO1_PIN = 17  # GPIO 17 (Pin 11)
-    BUSY_PIN = 27  # GPIO 27 (Pin 13)
+    print("Attempting LoRa.begin()...")
+    result = LoRa.begin()
+    print(f"LoRa.begin() result: {result}")
+    if result:
+        print("✓ Success! Module initialized")
 
-    # Configure the GPIO pins
-    LoRa.setPin(nss=8, reset=RESET_PIN, dio1=DIO1_PIN, busy=BUSY_PIN)
-    print(
-        f"GPIO pins configured: NSS=8, RESET={RESET_PIN}, DIO1={DIO1_PIN}, BUSY={BUSY_PIN}"
-    )
+        # Try to get some basic info
+        try:
+            # Try different methods that might exist
+            if hasattr(LoRa, "getChipVersion"):
+                print(f"Chip version: {LoRa.getChipVersion()}")
+            if hasattr(LoRa, "getMode"):
+                print(f"Current mode: {LoRa.getMode()}")
+        except Exception as e:
+            print(f"Error getting module info: {e}")
 
-except AttributeError:
-    print("Warning: setPin() method not available. Trying alternative configuration...")
-    try:
-        # Alternative pin setting methods
-        LoRa.setResetPin(22)
-        LoRa.setDio1Pin(17)
-        LoRa.setBusyPin(27)
-        print("GPIO pins configured using individual methods")
-    except AttributeError:
-        print("Warning: Individual pin methods not available either")
-
-# Configure SPI settings
-print("Attempting to configure SPI...")
-try:
-    LoRa.setSPI(0, 0, 1000000)  # Lower speed: 1MHz instead of 7.8MHz
-    print("SPI configured: Bus 0, CS 0, Speed 1MHz")
-except Exception as e:
-    print(f"SPI configuration error: {e}")
-
-# Add delay before begin
-time.sleep(0.1)
-
-print("Attempting to initialize SX126x...")
-try:
-    if not LoRa.begin():
-        print("✗ Failed: LoRa.begin() returned False")
-
-        # Try alternative configurations
-        print("Trying alternative SPI settings...")
-
-        # Try CS1 instead of CS0
-        LoRa.setSPI(0, 1, 1000000)
-        time.sleep(0.1)
-        if LoRa.begin():
-            print("✓ Success with CS1!")
-        else:
-            print("✗ Still failed with CS1")
-
-            # Try even slower speed
-            LoRa.setSPI(0, 0, 500000)  # 500kHz
-            time.sleep(0.1)
-            if LoRa.begin():
-                print("✓ Success with 500kHz!")
-            else:
-                print("✗ All SPI configurations failed")
-                raise Exception("Could not initialize SX126x module")
     else:
-        print("✓ SX126x module initialized successfully!")
+        print("✗ Failed to initialize")
 
 except Exception as e:
-    print(f"Detailed error: {e}")
-    print("\nTroubleshooting suggestions:")
-    print("1. Check wiring connections:")
-    print("   - VCC → 3.3V (Pin 1 or 17)")
-    print("   - GND → Ground (Pin 6, 9, 14, 20, 25, 30, 34, or 39)")
-    print("   - SCK → GPIO 11 (Pin 23)")
-    print("   - MISO → GPIO 9 (Pin 21)")
-    print("   - MOSI → GPIO 10 (Pin 19)")
-    print("   - NSS/CS → GPIO 8 (Pin 24) for CS0 or GPIO 7 (Pin 26) for CS1")
-    print(f"   - RESET → GPIO {RESET_PIN} (Pin 15)")
-    print(f"   - DIO1 → GPIO {DIO1_PIN} (Pin 11)")
-    print(f"   - BUSY → GPIO {BUSY_PIN} (Pin 13)")
-    print("2. Verify 3.3V power supply (NOT 5V!)")
-    print("3. Ensure SPI is enabled: sudo raspi-config")
-    print("4. Check if module is SX1262/SX1261 (not SX127x)")
-    print("5. Run: sudo usermod -a -G gpio,spi $USER")
-    raise
+    print(f"Error during begin(): {e}")
 
-# Set frequency to 868 MHz (for EU/UK PixMob bracelets)
-# Use 915 MHz for US bracelets: LoRa.setFrequency(915000000)
-LoRa.setFrequency(868000000)
+# Now try to configure SPI if the module supports it
+print("\nTrying SPI configuration...")
+spi_methods = ["setSPI", "setSpi", "configureSPI", "spiConfig"]
+spi_configured = False
 
-# Configure for OOK modulation instead of LoRa
-# PixMob bracelets use OOK (On-Off Keying), not LoRa modulation
+for method_name in spi_methods:
+    if hasattr(LoRa, method_name):
+        try:
+            method = getattr(LoRa, method_name)
+            print(f"Found SPI method: {method_name}")
+            # Try common parameter combinations
+            try:
+                method(0, 0, 1000000)  # bus, cs, speed
+                print(f"✓ SPI configured with {method_name}")
+                spi_configured = True
+                break
+            except Exception as e:
+                print(f"Error with {method_name}(0, 0, 1000000): {e}")
+                try:
+                    method(0, 0)  # bus, cs only
+                    print(f"✓ SPI configured with {method_name}(bus, cs)")
+                    spi_configured = True
+                    break
+                except Exception as e2:
+                    print(f"Error with {method_name}(0, 0): {e2}")
+        except Exception as e:
+            print(f"Error accessing {method_name}: {e}")
+
+if not spi_configured:
+    print("No SPI configuration method found or working")
+
+# Try to set frequency
+print("\nTrying frequency configuration...")
+freq_methods = ["setFrequency", "setFreq", "frequency"]
+for method_name in freq_methods:
+    if hasattr(LoRa, method_name):
+        try:
+            method = getattr(LoRa, method_name)
+            method(868000000)  # 868 MHz
+            print(f"✓ Frequency set using {method_name}")
+            break
+        except Exception as e:
+            print(f"Error with {method_name}: {e}")
+
+print("\nNow attempting full initialization...")
 try:
-    # Try to set OOK mode - this depends on your LoRaRF library version
-    LoRa.setOOK(True)
-except AttributeError:
-    print("Warning: OOK mode not directly supported by this library")
-    print("You may need to use a different library or radio configuration")
+    if LoRa.begin():
+        print("✓ Final initialization successful!")
 
-# Set transmit power
-LoRa.setTxPower(2, LoRa.TX_POWER_SX1262)
+        # Try basic packet transmission test
+        print("Testing basic packet transmission...")
+        try:
+            # Look for transmission methods
+            tx_methods = ["transmit", "send", "sendPacket", "write"]
+            for method_name in tx_methods:
+                if hasattr(LoRa, method_name):
+                    print(f"Found transmission method: {method_name}")
+        except Exception as e:
+            print(f"Error checking transmission methods: {e}")
 
-# Enable direct transmission mode for OOK
-try:
-    LoRa.transmitDirect()
-except AttributeError:
-    print("Warning: Direct transmission mode not available")
+    else:
+        print("✗ Final initialization failed")
+        print("\nThis could be due to:")
+        print("1. Incorrect wiring")
+        print("2. Wrong GPIO pin configuration")
+        print("3. SPI not enabled")
+        print("4. Module power issues")
 
+except Exception as e:
+    print(f"Final initialization error: {e}")
 
-def format_data_for_transmission(raw_data):
-    """
-    Convert PixMob raw timing data to binary stream for transmission
-
-    Args:
-        raw_data (str): Space-separated timing values (e.g., "510 -510 510 -1020 ...")
-
-    Returns:
-        list: Binary stream representing the timing data
-    """
-    binary_stream = []
-    time_unit = 510  # Basic unit of time in microseconds
-
-    # Split the raw data into individual durations
-    durations = [int(x) for x in raw_data.split()]
-
-    for duration in durations:
-        # Positive values = signal ON (1), negative values = signal OFF (0)
-        signal_state = 1 if duration > 0 else 0
-        num_units = round(abs(duration) / time_unit)
-
-        # Append the corresponding number of bits to the binary stream
-        binary_stream.extend([signal_state] * num_units)
-
-    return binary_stream
-
-
-def transmit_pixmob_signal(binary_stream, bit_duration_us=510):
-    """
-    Transmit binary stream using direct OOK modulation
-
-    Args:
-        binary_stream (list): Binary data to transmit
-        bit_duration_us (int): Duration of each bit in microseconds
-    """
-    try:
-        for bit in binary_stream:
-            if bit == 1:
-                # Turn on transmission
-                LoRa.transmitDirect()
-            else:
-                # Turn off transmission
-                LoRa.standby()
-
-            # Wait for bit duration
-            time.sleep(bit_duration_us / 1000000.0)  # Convert to seconds
-
-        # Ensure transmission is off at the end
-        LoRa.standby()
-
-    except Exception as e:
-        print(f"Error during transmission: {e}")
-        LoRa.standby()
-
-
-def send_pixmob_command(command_data, repeat_count=5):
-    """
-    Send a PixMob command with repeats
-
-    Args:
-        command_data (str): Raw timing data string
-        repeat_count (int): Number of times to repeat the command
-    """
-    binary_stream = format_data_for_transmission(command_data)
-
-    print(f"Sending PixMob command (repeated {repeat_count} times)...")
-    print(f"Binary stream length: {len(binary_stream)} bits")
-
-    for i in range(repeat_count):
-        print(f"Transmission {i+1}/{repeat_count}")
-        transmit_pixmob_signal(binary_stream)
-        time.sleep(0.1)  # Small delay between repeats
-
-
-# Example PixMob commands (868 MHz versions)
-PIXMOB_COMMANDS = {
-    "nothing": "510 -510 510 -510 510 -510 510 -510 510 -510 510 -510 510 -510 510 -1020 510 -510 510 -510 1020 -510 510 -510 510 -2040 510 -1530 1020 -2040 510 -510 1020 -2040 510 -510 510 -1530 1020 -1020 510 -1530 1020 -510 510 -510 510 -2040 510 -2040 510 -510 510 -1020 510",
-    "gold_fade_in": "510 -510 510 -510 510 -510 510 -510 510 -510 510 -510 510 -510 510 -1020 1020 -510 510 -1020 510 -2040 510 -1020 510 -2040 510 -1020 510 -510 1020 -510 510 -510 1020 -2040 510 -1020 510 -510 1020 -1020 510 -510 1020 -2040 510 -1530 1020 -1020 510 -510 510",
-    "white_fastfade": "510 -510 510 -510 510 -510 510 -510 510 -510 510 -510 510 -510 510 -1020 510 -510 1020 -1020 510 -510 510 -2040 510 -1020 510 -510 1020 -510 1020 -1530 510 -1020 510 -1020 510 -510 1020 -2040 510 -2040 510 -510 510 -1020 510 -510 1020 -1020 510 -510 1020",
-    "wine_fade_in": "510 -510 510 -510 510 -510 510 -510 510 -510 510 -510 510 -510 510 -1020 1020 -510 1020 -510 510 -2040 510 -1020 510 -2040 510 -1020 510 -510 1020 -510 510 -510 1020 -2040 510 -1020 510 -510 1020 -1020 510 -510 1020 -2040 510 -1530 1020 -2040 510",
-}
-
-# Example usage - wake up bracelets first
-if __name__ == "__main__":
-    print("Waking up PixMob bracelets...")
-    # Send "nothing" command repeatedly for 30 seconds to wake up sleeping bracelets
-    wake_duration = 30  # seconds
-    wake_start = time.time()
-
-    while time.time() - wake_start < wake_duration:
-        send_pixmob_command(PIXMOB_COMMANDS["nothing"], repeat_count=1)
-        time.sleep(1)
-
-    print("Bracelets should now be awake. Sending color commands...")
-
-    # Send actual color commands
-    send_pixmob_command(PIXMOB_COMMANDS["gold_fade_in"], repeat_count=10)
-    time.sleep(2)
-    send_pixmob_command(PIXMOB_COMMANDS["white_fastfade"], repeat_count=10)
-    time.sleep(2)
-    send_pixmob_command(PIXMOB_COMMANDS["wine_fade_in"], repeat_count=10)
-
-    print("Transmission complete!")
+print("\nDiagnostic complete.")
