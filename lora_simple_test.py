@@ -19,7 +19,7 @@ def simple_lora_test():
 
         # Begin LoRa
         if not lora.begin():
-            print("❌ ERROR: Failed to initialize LoRa module!")
+            print("[ERROR] Failed to initialize LoRa module!")
             print("Check connections:")
             print("- SPI wiring (MOSI, MISO, SCK)")
             print("- CS/NSS pin connection")
@@ -27,7 +27,7 @@ def simple_lora_test():
             print("- Power supply (3.3V)")
             return False
 
-        print("✅ LoRa module initialized successfully!")
+        print("[SUCCESS] LoRa module initialized successfully!")
 
         # Configure basic settings
         print("Configuring LoRa settings...")
@@ -39,7 +39,7 @@ def simple_lora_test():
         )
         lora.setTxPower(14)  # 14 dBm
 
-        print("✅ LoRa configured successfully!")
+        print("[SUCCESS] LoRa configured successfully!")
 
         # Send test messages
         test_messages = ["Hello World!", "LoRa Test 123", "SX126X Working!"]
@@ -53,26 +53,26 @@ def simple_lora_test():
             result = lora.sendPacket(message_bytes)
 
             if result:
-                print(f"✅ Message {i} sent successfully!")
+                print(f"[SUCCESS] Message {i} sent successfully!")
             else:
-                print(f"❌ Message {i} failed to send!")
+                print(f"[FAILED] Message {i} failed to send!")
 
             # Wait between messages
             time.sleep(2)
 
         print("\n=== Test Complete ===")
-        print("If you see checkmarks above, your LoRa module is working!")
+        print("If you see [SUCCESS] messages above, your LoRa module is working!")
         print("Use a LoRa receiver or another LoRa device to verify transmission.")
 
         return True
 
     except ImportError:
-        print("❌ ERROR: LoRaRF library not found!")
+        print("[ERROR] LoRaRF library not found!")
         print("Install with: pip install LoRaRF")
         return False
 
     except Exception as e:
-        print(f"❌ ERROR: {e}")
+        print(f"[ERROR] {e}")
         print("\nTroubleshooting steps:")
         print("1. Check all wiring connections")
         print("2. Verify SPI is enabled: sudo raspi-config -> Interface Options -> SPI")
