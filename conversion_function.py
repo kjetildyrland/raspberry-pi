@@ -14,7 +14,7 @@ print("\nTrying basic initialization...")
 # Configure SPI first
 print("Configuring SPI...")
 try:
-    LoRa.setSpi(0, 0, 1000000)  # bus 0, CS 0, 1MHz
+    LoRa.setSPI(0, 0, 7800000)  # bus 0, CS 0, 7.8MHz
     print("[SUCCESS] SPI configured")
 except Exception as e:
     print(f"SPI error: {e}")

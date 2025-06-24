@@ -1,0 +1,2 @@
+LoRaRF>=0.1.0
+pyserial>=3.4 
