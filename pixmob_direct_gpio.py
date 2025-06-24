@@ -14,7 +14,7 @@ class DirectPIXMOBTransmitter:
         """
         Initialize direct GPIO transmitter
         dio2_pin: GPIO pin connected to LoRa module's DIO2 (for direct modulation)
-        bit_duration: Duration of each bit in microseconds (500µs = 2000 bits/sec)
+        bit_duration: Duration of each bit in microseconds (500us = 2000 bits/sec)
         """
         self.dio2_pin = dio2_pin
         self.bit_duration = bit_duration  # microseconds
@@ -26,7 +26,7 @@ class DirectPIXMOBTransmitter:
         GPIO.output(self.dio2_pin, GPIO.LOW)
         
         print(f"Direct GPIO transmitter initialized on pin {dio2_pin}")
-        print(f"Bit duration: {bit_duration}µs")
+        print(f"Bit duration: {bit_duration}us")
     
     def microsecond_delay(self, microseconds):
         """Precise microsecond delay"""
@@ -154,7 +154,7 @@ def test_direct_pixmob():
             bit_durations = [250, 500, 1000, 2000]  # microseconds
             
             for duration in bit_durations:
-                print(f"\nTrying bit duration: {duration}µs")
+                print(f"\nTrying bit duration: {duration}us")
                 transmitter.bit_duration = duration
                 transmitter.send_pixmob_command('gold_test', pixmob_commands['gold_fade_in'], repeat_count=5)
                 
