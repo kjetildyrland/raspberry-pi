@@ -129,7 +129,7 @@ def test_direct_pixmob():
         response = input("\nDid you see GOLD light? (y/n): ").lower().strip()
         
         if response.startswith('y'):
-            print("\n🎉 SUCCESS! Direct GPIO method is working!")
+            print("\n[SUCCESS] Direct GPIO method is working!")
             
             # Test more colors
             for cmd_name in ['white_fastfade', 'blue_fade', 'red_fade']:
@@ -142,7 +142,7 @@ def test_direct_pixmob():
             transmitter.send_pixmob_command('turn_off', pixmob_commands['wake_up'])
             
         else:
-            print("\n❌ No response with direct GPIO method either")
+            print("\n[ERROR] No response with direct GPIO method either")
             print("Possible issues:")
             print("- DIO2 pin (GPIO 23) might not be connected correctly")
             print("- Bit timing might need adjustment")
@@ -158,9 +158,9 @@ def test_direct_pixmob():
                 transmitter.bit_duration = duration
                 transmitter.send_pixmob_command('gold_test', pixmob_commands['gold_fade_in'], repeat_count=5)
                 
-                response = input(f"Any response with {duration}µs timing? (y/n): ").lower().strip()
+                response = input(f"Any response with {duration}us timing? (y/n): ").lower().strip()
                 if response.startswith('y'):
-                    print(f"✓ Bit duration {duration}µs works!")
+                    print(f"[SUCCESS] Bit duration {duration}us works!")
                     break
     
     except KeyboardInterrupt:
@@ -208,7 +208,7 @@ if __name__ == "__main__":
     print("This uses direct GPIO modulation instead of LoRa protocol")
     print("Based on the radiolib C++ approach")
     print()
-    print("⚠️  Important: This requires DIO2 pin connected to GPIO 23")
+    print("WARNING: This requires DIO2 pin connected to GPIO 23")
     print()
     
     choice = input("Choose mode:\n1. Full direct GPIO test\n2. Continuous direct wake\nEnter 1 or 2: ").strip()
