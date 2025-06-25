@@ -83,7 +83,7 @@ int main(int argc, char **argv)
     printf("success!\n");
     
     radio.setFrequency(868.0F);
-    radio.setOOK(true);
+    // SX1262 doesn't support setOOK method - OOK mode is set during beginFSK
     radio.transmitDirect();
     
     // Initialize timestamp
