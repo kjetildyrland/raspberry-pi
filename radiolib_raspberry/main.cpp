@@ -1,4 +1,6 @@
 #include <RadioLib/RadioLib.h>
+#include <array>
+#include <cstdint>
 
 // include the hardware abstraction layer
 #include "PiHal.h"
@@ -11,7 +13,7 @@
 PiHal *hal = new PiHal(1);
 
 unsigned long Timestamp;
-SX1261 radio = new Module(hal, 7, 17, 22, RADIOLIB_NC);
+SX1262 radio = new Module(hal, 21, 16, 18, 20);
 // SX126X radio = new Module(RADIO_NSS_PORT, RADIO_DIO_1_PORT, RADIO_BUSY_PORT, RADIO_RESET_PORT, RADIO_DIO_1_PORT);
 int ColorIndex = 0, BitDuration = 500;
 #define ValidValuesCount 4
@@ -27,7 +29,7 @@ void MicrosDelay(unsigned long m)
     }
 }
 
-std::array<byte, BytesCount> ByteArray;
+std::array<uint8_t, BytesCount> ByteArray;
 std::array<std::array<int, BytesCount>, ValidValuesCount> ColorArrayArray{{
     {0xaa, 0xaa, 0x65, 0x21, 0x24, 0x6d, 0x61, 0x23, 0x11, 0x61, 0x2b, 0x40}, // gold_fade_in
     {0xaa, 0xaa, 0x5b, 0x61, 0x24, 0x6d, 0x61, 0x12, 0x51, 0x61, 0x22, 0x80}, // gold_fast_fade
@@ -70,7 +72,7 @@ int main(int argc, char **argv)
     hal->pinMode(RADIO_DIO_2_PORT, PI_OUTPUT);
     
     // Initialize radio
-    printf("[SX1261] Initializing ... ");
+    printf("[SX1262] Initializing ... ");
     int state = radio.beginFSK(868.0, 4.8, 0.0, 20.0, 10, 16, 0.0, false);
     if (state != RADIOLIB_ERR_NONE)
     {
