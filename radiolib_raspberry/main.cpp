@@ -13,7 +13,8 @@
 PiHal *hal = new PiHal(1);
 
 unsigned long Timestamp;
-SX1262 radio = new Module(hal, 21, 16, 18, 20);
+SX1262 radio = new Module(hal, 8, 17, 22, 7);
+// Waveshare SX1262 HAT pinout: NSS=8, DIO1=17, RESET=22, BUSY=7
 // SX126X radio = new Module(RADIO_NSS_PORT, RADIO_DIO_1_PORT, RADIO_BUSY_PORT, RADIO_RESET_PORT, RADIO_DIO_1_PORT);
 int ColorIndex = 0, BitDuration = 500;
 #define ValidValuesCount 4
@@ -65,8 +66,10 @@ void ByteArraySend(void)
 
 int main(int argc, char **argv)
 {
-    // Initialize the HAL
+    // Initialize the HAL first, before any other operations
+    printf("Initializing GPIO and SPI... ");
     hal->init();
+    printf("success!\n");
     
     // Set up the DIO2 pin as output
     hal->pinMode(RADIO_DIO_2_PORT, PI_OUTPUT);

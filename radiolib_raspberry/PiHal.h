@@ -30,9 +30,8 @@ public:
         // now the SPI
         spiBegin();
 
-        // Waveshare LoRaWAN Hat also needs pin 18 to be pulled high to enable the radio
-        gpioSetMode(18, PI_OUTPUT);
-        gpioWrite(18, PI_HIGH);
+        // Waveshare SX1262 HAT doesn't need a separate enable pin
+        // Reset is handled by RadioLib through pin 22
     }
 
     void term() override
@@ -40,9 +39,7 @@ public:
         // stop the SPI
         spiEnd();
 
-        // pull the enable pin low
-        gpioSetMode(18, PI_OUTPUT);
-        gpioWrite(18, PI_LOW);
+        // No separate enable pin to pull low for SX1262 HAT
 
         // finally, stop the pigpio library
         gpioTerminate();
