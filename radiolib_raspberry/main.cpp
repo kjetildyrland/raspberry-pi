@@ -71,7 +71,7 @@ int main(int argc, char **argv)
     
     // Initialize radio
     printf("[SX1261] Initializing ... ");
-    int state = radio.beginFSK();
+    int state = radio.beginFSK(868.0, 4.8, 0.0, 20.0, 10, 16, 0.0, false);
     if (state != RADIOLIB_ERR_NONE)
     {
         printf("failed, code %d\n", state);
